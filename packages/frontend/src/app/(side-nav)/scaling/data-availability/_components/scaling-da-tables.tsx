@@ -6,14 +6,20 @@ import {
   DirectoryTabsList,
   DirectoryTabsTrigger,
 } from '~/components/core/directory-tabs'
+import {
+  OthersInfo,
+  RollupsInfo,
+  ValidiumsAndOptimiumsInfo,
+} from '~/components/scaling-tabs-info'
 import { TableSortingProvider } from '~/components/table/sorting/table-sorting-context'
+import { featureFlags } from '~/consts/feature-flags'
 import { type ScalingDataAvailabilityEntry } from '~/server/features/scaling/data-availability/get-scaling-da-entries'
-import { type CategorisedScalingEntries } from '~/utils/group-by-main-categories'
+import { type TabbedScalingEntries } from '~/utils/group-by-tabs'
 import { useScalingFilter } from '../../_components/scaling-filter-context'
 import { ScalingFilters } from '../../_components/scaling-filters'
 import { ScalingDataAvailabilityTable } from './table/scaling-da-table'
 
-type Props = CategorisedScalingEntries<ScalingDataAvailabilityEntry>
+type Props = TabbedScalingEntries<ScalingDataAvailabilityEntry>
 
 export function ScalingDaTables(props: Props) {
   const includeFilters = useScalingFilter()
@@ -21,7 +27,7 @@ export function ScalingDaTables(props: Props) {
   const filteredEntries = {
     rollups: props.rollups.filter(includeFilters),
     validiumsAndOptimiums: props.validiumsAndOptimiums.filter(includeFilters),
-    others: props.others?.filter(includeFilters) ?? [],
+    others: props.others.filter(includeFilters),
   }
   const initialSort = {
     id: '#',
@@ -49,7 +55,7 @@ export function ScalingDaTables(props: Props) {
               {filteredEntries.validiumsAndOptimiums.length}
             </CountBadge>
           </DirectoryTabsTrigger>
-          {filteredEntries.others.length > 0 && (
+          {featureFlags.showOthers && filteredEntries.others.length > 0 && (
             <DirectoryTabsTrigger value="others">
               Others <CountBadge>{filteredEntries.others.length}</CountBadge>
             </DirectoryTabsTrigger>
@@ -57,6 +63,7 @@ export function ScalingDaTables(props: Props) {
         </DirectoryTabsList>
         <TableSortingProvider initialSort={initialSort}>
           <DirectoryTabsContent value="rollups">
+            <RollupsInfo />
             <ScalingDataAvailabilityTable
               entries={filteredEntries.rollups}
               rollups
@@ -65,14 +72,16 @@ export function ScalingDaTables(props: Props) {
         </TableSortingProvider>
         <TableSortingProvider initialSort={initialSort}>
           <DirectoryTabsContent value="validiums-and-optimiums">
+            <ValidiumsAndOptimiumsInfo />
             <ScalingDataAvailabilityTable
               entries={filteredEntries.validiumsAndOptimiums}
             />
           </DirectoryTabsContent>
         </TableSortingProvider>
-        {filteredEntries.others.length > 0 && (
+        {featureFlags.showOthers && filteredEntries.others.length > 0 && (
           <TableSortingProvider initialSort={initialSort}>
             <DirectoryTabsContent value="others">
+              <OthersInfo />
               <ScalingDataAvailabilityTable entries={filteredEntries.others} />
             </DirectoryTabsContent>
           </TableSortingProvider>
